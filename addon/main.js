@@ -21,6 +21,7 @@ export default Ember.Mixin.create({
   _setupResizeHandlers: function () {
     var resizeHandler = this.get('_handleResize');
     var parent = this.findResizableParentView(this.get('parentView'));
+    this._resizableParent = parent;
     if (Ember.isNone(parent)) {
       resizeHandler = Ember.$.proxy(resizeHandler, this);
       // element doesn't have resizable views, so bind to the window
@@ -34,8 +35,10 @@ export default Ember.Mixin.create({
    * Unbind from window if window binding was used
    */
   _removeResizeHandlers: function () {
-    if (this._resizeHandler) {
+    if (Ember.isNone(this._resizableParent)) {
       Ember.$(window).off("resize." + this.elementId, this._resizeHandler);
+    } else {
+      this._resizableParent.off('resize', this, this.get('_handleResize'));
     }
   }.on('willDestroyElement'),
   /**

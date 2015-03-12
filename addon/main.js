@@ -20,25 +20,24 @@ export default Ember.Mixin.create({
    */
   _setupResizeHandlers: function () {
     var resizeHandler = this.get('_handleResize');
-    var parent = this.findResizableParentView(this.get('parentView'));
-    this._resizableParent = parent;
-    if (Ember.isNone(parent)) {
+    this._parent = this.findResizableParentView(this.get('parentView'));
+    if (Ember.isNone(this._parent)) {
       resizeHandler = Ember.$.proxy(resizeHandler, this);
       // element doesn't have resizable views, so bind to the window
       Ember.$(window).on("resize." + this.elementId, resizeHandler);
       this._resizeHandler = resizeHandler;
     } else {
-      parent.on('resize', this, resizeHandler);
+      this._parent.on('resize', this, resizeHandler);
     }
   }.on('didInsertElement'),
   /**
    * Unbind from window if window binding was used
    */
   _removeResizeHandlers: function () {
-    if (Ember.isNone(this._resizableParent)) {
+    if (this._resizeHandler) {
       Ember.$(window).off("resize." + this.elementId, this._resizeHandler);
     } else {
-      this._resizableParent.off('resize', this, this.get('_handleResize'));
+      this._parent.off('resize', this, this.get('_handleResize'));
     }
   }.on('willDestroyElement'),
   /**
@@ -69,6 +68,9 @@ export default Ember.Mixin.create({
    * @private
    */
   _endResize: function (event) {
+    if (this.get('isDestroyed')) {
+      return;
+    }
     this.set('resizing', false);
     if (this.has('resizeEnd')) {
       this.trigger('resizeEnd', event);
